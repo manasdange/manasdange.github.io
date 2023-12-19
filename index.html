@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="no-js">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,9 +8,179 @@
     <title>Celestial Flow 1.0</title>
     <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:400,600" rel="stylesheet">
     <link rel="stylesheet" href="dist/css/style.css">
-	<script src="https://unpkg.com/animejs@3.0.1/lib/anime.min.js"></script>
+    <script src="https://unpkg.com/animejs@3.0.1/lib/anime.min.js"></script>
     <script src="https://unpkg.com/scrollreveal@4.0.0/dist/scrollreveal.min.js"></script>
+    <style>
+        #carousel {
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .slide-indicators {
+            display: flex;
+            justify-content: center;
+        }
+
+        .slide-indicator {
+            height: 44px;
+            width: 50px;
+            display: flex;
+            justify-items: center;
+            cursor: pointer;
+        }
+
+        .slide-indicator:after {
+            content: "";
+            background-color: #878787;
+            height: 10px;
+            margin-top: 10px;
+            width: 40px;
+        }
+
+        .slide-indicator.active:after,
+        .slide-indicator:hover:after {
+            background-color: #000;
+        }
+
+        .slide-banner {
+            background-color: #000;
+            color: #fff;
+            position: absolute;
+            left: 0;
+            bottom: 20px;
+            padding: 15px;
+            font-size: 2.5vw;
+        }
+
+        .slide-banner a {
+            color: #fff;
+        }
+
+        #slide-container {
+            scroll-snap-type: x mandatory;
+            overflow-x: scroll;
+            overflow-y: hidden;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            gap: 10px;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+
+        .slide {
+            scroll-snap-align: center;
+            position: relative;
+            min-width: 100%;
+            padding-top: 50%;
+        }
+
+        .slide img {
+            height: 100%;
+            width: auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .arrow {
+            color: #fff;
+            height: 20px;
+            width: 20px;
+            background-color: #000;
+            position: absolute;
+            padding: 10px;
+            opacity: .3;
+            cursor: pointer;
+        }
+
+        .arrow.back {
+            left: 10px;
+            top: 10px;
+        }
+
+        .arrow.forward {
+            right: 10px;
+            top: 10px;
+        }
+
+        .arrow:hover {
+            opacity: 1;
+        }
+    </style>
+    <script>
+        function autoplayCarousel() {
+            const carouselEl = document.getElementById("carousel");
+            const slideContainerEl = carouselEl.querySelector("#slide-container");
+            const slideEl = carouselEl.querySelector(".slide");
+            let slideWidth = slideEl.offsetWidth;
+            // Add click handlers
+            document.querySelector("#back-button")
+                .addEventListener("click", () => navigate("backward"));
+            document.querySelector("#forward-button")
+                .addEventListener("click", () => navigate("forward"));
+            document.querySelectorAll(".slide-indicator")
+                .forEach((dot, index) => {
+                    dot.addEventListener("click", () => navigate(index));
+                    dot.addEventListener("mouseenter", () => clearInterval(autoplay));
+                });
+            // Add keyboard handlers
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'ArrowLeft') {
+                    clearInterval(autoplay);
+                    navigate("backward");
+                } else if (e.code === 'ArrowRight') {
+                    clearInterval(autoplay);
+                    navigate("forward");
+                }
+            });
+            // Add resize handler
+            window.addEventListener('resize', () => {
+                slideWidth = slideEl.offsetWidth;
+            });
+            // Autoplay
+            const autoplay = setInterval(() => navigate("forward"), 3000);
+            slideContainerEl.addEventListener("mouseenter", () => clearInterval(autoplay));
+            // Slide transition
+            const getNewScrollPosition = (arg) => {
+                const gap = 10;
+                const maxScrollLeft = slideContainerEl.scrollWidth - slideWidth;
+                if (arg === "forward") {
+                    const x = slideContainerEl.scrollLeft + slideWidth + gap;
+                    return x <= maxScrollLeft ? x : 0;
+                } else if (arg === "backward") {
+                    const x = slideContainerEl.scrollLeft - slideWidth - gap;
+                    return x >= 0 ? x : maxScrollLeft;
+                } else if (typeof arg === "number") {
+                    const x = arg * (slideWidth + gap);
+                    return x;
+                }
+            }
+            const navigate = (arg) => {
+                slideContainerEl.scrollLeft = getNewScrollPosition(arg);
+            }
+            // Slide indicators
+            const slideObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const slideIndex = entry.target.dataset.slideindex;
+                        carouselEl.querySelector('.slide-indicator.active').classList.remove('active');
+                        carouselEl.querySelectorAll('.slide-indicator')[slideIndex].classList.add('active');
+                    }
+                });
+            }, { root: slideContainerEl, threshold: .1 });
+            document.querySelectorAll('.slide').forEach((slide) => {
+                slideObserver.observe(slide);
+            });
+        }
+        autoplayCarousel();
+
+    </script>
 </head>
+
 <body class="is-boxed has-animations">
     <div class="body-wrap">
         <header class="site-header">
@@ -17,8 +188,8 @@
                 <div class="site-header-inner">
                     <div class="brand header-brand">
                         <h1 class="m-0">
-							<a href="#">
-								<img class="header-logo-image" src="dist/images/logo.svg" alt="Logo">
+                            <a href="#">
+                                <img class="header-logo-image" src="dist/images/logo.svg" alt="Logo">
                             </a>
                         </h1>
                     </div>
@@ -30,71 +201,124 @@
             <section class="hero">
                 <div class="container">
                     <div class="hero-inner">
-						<div class="hero-copy">
-	                        <h1 class="hero-title mt-0">Get Ready for Celestial Flow 1.0</h1>
-	                        <p class="hero-paragraph">Enjoy the night with techno, trance and drinks in the lap of the mountains.</p>
-	                        <div class="hero-cta"><a class="button button-primary" href="https://docs.google.com/forms/d/1TeSJkkSCLluxT3ZRRi_GPItObHi3eoYUusmdJEgYrH4">Register Now</a><a class="button" href="https://wa.me/917453908792">Get in touch</a></div>
-						</div>
-						<div class="hero-figure anime-element">
-							<svg class="placeholder" width="528" height="396" viewBox="0 0 528 396">
-								<rect width="528" height="396" style="fill:transparent;" />
-							</svg>
-							<div class="hero-figure-box hero-figure-box-01" data-rotation="45deg"></div>
-							<div class="hero-figure-box hero-figure-box-02" data-rotation="-45deg"></div>
-							<div class="hero-figure-box hero-figure-box-03" data-rotation="0deg"></div>
-							<div class="hero-figure-box hero-figure-box-04" data-rotation="-135deg"></div>
-							<div class="hero-figure-box hero-figure-box-05"></div>
-							<div class="hero-figure-box hero-figure-box-06"></div>
-							<div class="hero-figure-box hero-figure-box-07"></div>
-							<div class="hero-figure-box hero-figure-box-08" data-rotation="-22deg"></div>
-							<div class="hero-figure-box hero-figure-box-09" data-rotation="-52deg"></div>
-							<div class="hero-figure-box hero-figure-box-10" data-rotation="-50deg"></div>
-						</div>
+                        <div class="hero-copy">
+                            <h1 class="hero-title mt-0">Get Ready for Celestial Flow 1.0</h1>
+                            <p class="hero-paragraph">Enjoy the night with techno, trance and drinks in the lap of the
+                                mountains.</p>
+                            <div class="hero-cta"><a class="button button-primary"
+                                    href="https://docs.google.com/forms/d/1TeSJkkSCLluxT3ZRRi_GPItObHi3eoYUusmdJEgYrH4">Register
+                                    Now</a><a class="button" href="https://wa.me/917453908792">Get in touch</a></div>
+                        </div>
+                        <div class="hero-figure anime-element">
+                            <svg class="placeholder" width="528" height="396" viewBox="0 0 528 396">
+                                <rect width="528" height="396" style="fill:transparent;" />
+                            </svg>
+                            <div class="hero-figure-box hero-figure-box-01" data-rotation="45deg"></div>
+                            <div class="hero-figure-box hero-figure-box-02" data-rotation="-45deg"></div>
+                            <div class="hero-figure-box hero-figure-box-03" data-rotation="0deg"></div>
+                            <div class="hero-figure-box hero-figure-box-04" data-rotation="-135deg"></div>
+                            <div class="hero-figure-box hero-figure-box-05"></div>
+                            <div class="hero-figure-box hero-figure-box-06"></div>
+                            <div class="hero-figure-box hero-figure-box-07"></div>
+                            <div class="hero-figure-box hero-figure-box-08" data-rotation="-22deg"></div>
+                            <div class="hero-figure-box hero-figure-box-09" data-rotation="-52deg"></div>
+                            <div class="hero-figure-box hero-figure-box-10" data-rotation="-50deg"></div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <section class="features section">
                 <div class="container">
-					<div class="features-inner section-inner has-bottom-divider">
+                    <div class="features-inner section-inner has-bottom-divider">
                         <div class="features-wrap">
                             <div class="feature text-center is-revealing">
                                 <div class="feature-inner">
                                     <div class="feature-icon">
-										<img src="dist/images/mountains-sky-svgrepo-com.svg" alt="Feature 01" height="100px" width="100px">
+                                        <img src="dist/images/mountains-sky-svgrepo-com.svg" alt="Feature 01"
+                                            height="100px" width="100px">
                                     </div>
                                     <h4 class="feature-title mt-24">Celestial Flow</h4>
-                                    <p class="text-sm mb-0">Join us for an electrifying night of transcedental techno beats under the enchanting moonlight by the holy Ganges in Rishikesh! Our lineup features five sensational DJs, each ready to elevate your senses and keep you grooving all night long.</p>
+                                    <p class="text-sm mb-0">Join us for an electrifying night of transcedental techno
+                                        beats under the enchanting moonlight by the holy Ganges in Rishikesh! Our lineup
+                                        features five sensational DJs, each ready to elevate your senses and keep you
+                                        grooving all night long.</p>
                                 </div>
                             </div>
-							<div class="feature text-center is-revealing">
+                            <div class="feature text-center is-revealing">
                                 <div class="feature-inner">
                                     <div class="feature-icon">
-										<img src="dist/images/drinks-svgrepo-com.svg" alt="Feature 02" height="100px" width="100px">
+                                        <img src="dist/images/drinks-svgrepo-com.svg" alt="Feature 02" height="100px"
+                                            width="100px">
                                     </div>
                                     <h4 class="feature-title mt-24">Drinks Galore</h4>
-                                    <p class="text-sm mb-0">Sip on specially crafted concoctions as you dance the night away. From refreshing mmocktails to high-energy cocktails, our bar will keep the spirits flowing.</p>
+                                    <p class="text-sm mb-0">Sip on specially crafted concoctions as you dance the night
+                                        away. From refreshing mmocktails to high-energy cocktails, our bar will keep the
+                                        spirits flowing.</p>
                                 </div>
                             </div>
                             <div class="feature text-center is-revealing">
                                 <div class="feature-inner">
                                     <div class="feature-icon">
-										<img src="dist/images/fire-svgrepo-com.svg" alt="Feature 03" height="100px" width="100px">
+                                        <img src="dist/images/fire-svgrepo-com.svg" alt="Feature 03" height="100px"
+                                            width="100px">
                                     </div>
                                     <h4 class="feature-title mt-24">Fire Dancers</h4>
-                                    <p class="text-sm mb-0">Be mesmerized by the rhythmic movements of our talented fire dancers, adding a touch of mystique and energyto the night. Their captivating performance will ignite the atmosphere and leave you spellbound.</p>
+                                    <p class="text-sm mb-0">Be mesmerized by the rhythmic movements of our talented fire
+                                        dancers, adding a touch of mystique and energyto the night. Their captivating
+                                        performance will ignite the atmosphere and leave you spellbound.</p>
                                 </div>
                             </div>
                             <div class="feature text-center is-revealing">
                                 <div class="feature-inner">
                                     <div class="feature-icon">
-										<img src="dist/images/moon-night-svgrepo-com.svg" alt="Feature 04" height="100px" width="100px">
+                                        <img src="dist/images/moon-night-svgrepo-com.svg" alt="Feature 04"
+                                            height="100px" width="100px">
                                     </div>
                                     <h4 class="feature-title mt-24">Moonlight Vibes</h4>
-                                    <p class="text-sm mb-0">Immerse yourself in the ethereal ambiance created by the glow of the moon over the tranquil Ganges. Let the moonlight be your guide as you lose yourself in the music and magic of the night.</p>
+                                    <p class="text-sm mb-0">Immerse yourself in the ethereal ambiance created by the
+                                        glow of the moon over the tranquil Ganges. Let the moonlight be your guide as
+                                        you lose yourself in the music and magic of the night.</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div id="carousel">
+                    <div id="slide-container">
+                        <div class="slide" data-slideIndex="0">
+                            <div class="slide-banner">Tour the Empire State Building! <a href="">Buy tickets now.</a>
+                            </div>
+                            <img width="1200" height="600" src="./newyork.jpg">
+                        </div>
+                        <div class="slide" data-slideIndex="1">
+                            <div class="slide-banner">Ride the Shinkansen! <a href="">Buy tickets now.</a></div>
+                            <img width="1200" height="600" src="./tokyo.jpg">
+                        </div>
+                        <div class="slide" data-slideIndex="2">
+                            <div class="slide-banner">Discover relaxation! <a href="">Buy tickets now.</a></div>
+                            <img width="1200" height="600" src="./beach.jpg">
+                        </div>
+                        <div class="slide" data-slideIndex="3">
+                            <div class="slide-banner">See penguins! <a href="">Buy tickets now.</a></div>
+                            <img width="1200" height="600" src="./penguins.jpg">
+                        </div>
+                        <div class="slide" data-slideIndex="4">
+                            <div class="slide-banner">Take a ride on the wheel! <a href="">Buy tickets now.</a></div>
+                            <img width="1200" height="600" src="./wheel.jpg">
+                        </div>
+                    </div>
+                    <div id="back-button" class="arrow back">←</div>
+                    <div id="forward-button" class="arrow forward">→</div>
+                    <div class="slide-indicators">
+                        <div class="slide-indicator active"></div>
+                        <div class="slide-indicator"></div>
+                        <div class="slide-indicator"></div>
+                        <div class="slide-indicator"></div>
+                        <div class="slide-indicator"></div>
                     </div>
                 </div>
             </section>
@@ -104,30 +328,43 @@
                     <div class="pricing-inner section-inner">
                         <div class="pricing-header text-center">
                             <h2 class="section-title mt-0">Celestial Flow 1.0</h2>
-                            <p class="section-paragraph mb-0">Dont miss this opportunity to experience a one-of-a-kind techno celebration in the spiritual haven of Rishikesh. Come, dance and conncet with the rhythm of the universe.</p>
+                            <p class="section-paragraph mb-0">Dont miss this opportunity to experience a one-of-a-kind
+                                techno celebration in the spiritual haven of Rishikesh. Come, dance and conncet with the
+                                rhythm of the universe.</p>
                         </div>
-						<div class="pricing-tables-wrap">
+                        <div class="pricing-tables-wrap">
                             <div class="pricing-table">
                                 <div class="pricing-table-inner is-revealing">
                                     <div class="pricing-table-main">
                                         <div class="pricing-table-header pb-24">
-                                            <div class="pricing-table-price"><span class="pricing-table-price-currency h2">₹</span><span class="pricing-table-price-amount h1">799</span><span class="text-xs">only</span></div>
+                                            <div class="pricing-table-price"><span
+                                                    class="pricing-table-price-currency h2">₹</span><span
+                                                    class="pricing-table-price-amount h1">799</span><span
+                                                    class="text-xs">only</span></div>
                                         </div>
-										<!-- <div class="pricing-table-features-title text-xs pt-24 pb-24">What you will get</div> -->
+                                        <!-- <div class="pricing-table-features-title text-xs pt-24 pb-24">What you will get</div> -->
                                         <ul class="pricing-table-features list-reset text-xs">
                                             <li>
-                                                <span><img src="dist/images/calendar-days-svgrepo-com.svg" height="20px" width="20px"></span><span style="padding-left: 20px;">23rd December</span>
+                                                <span><img src="dist/images/calendar-days-svgrepo-com.svg" height="20px"
+                                                        width="20px"></span><span style="padding-left: 20px;">23rd
+                                                    December</span>
                                             </li>
                                             <li>
-                                                <span><img src="dist/images/clock-flow-general-svgrepo-com.svg" height="20px" width="20px"></span><span style="padding-left: 20px;">8PM Onwards</span>
+                                                <span><img src="dist/images/clock-flow-general-svgrepo-com.svg"
+                                                        height="20px" width="20px"></span><span
+                                                    style="padding-left: 20px;">8PM Onwards</span>
                                             </li>
                                             <li>
-                                                <span><img src="dist/images/wedding-location-svgrepo-com.svg" height="20px" width="20px"></span><span style="padding-left: 20px;">Kyarki Village</span>
+                                                <span><img src="dist/images/wedding-location-svgrepo-com.svg"
+                                                        height="20px" width="20px"></span><span
+                                                    style="padding-left: 20px;">Kyarki Village</span>
                                             </li>
                                         </ul>
                                     </div>
                                     <div class="pricing-table-cta mb-8">
-                                        <a class="button button-primary button-shadow button-block" href="https://docs.google.com/forms/d/1TeSJkkSCLluxT3ZRRi_GPItObHi3eoYUusmdJEgYrH4">Register now</a>
+                                        <a class="button button-primary button-shadow button-block"
+                                            href="https://docs.google.com/forms/d/1TeSJkkSCLluxT3ZRRi_GPItObHi3eoYUusmdJEgYrH4">Register
+                                            now</a>
                                     </div>
                                 </div>
                             </div>
@@ -141,9 +378,9 @@
             <div class="container">
                 <div class="site-footer-inner">
                     <div class="brand footer-brand">
-						<a href="#">
-							<img class="header-logo-image" src="dist/images/logo.svg" alt="Logo">
-						</a>
+                        <a href="#">
+                            <img class="header-logo-image" src="dist/images/logo.svg" alt="Logo">
+                        </a>
                     </div>
                     <ul class="footer-links list-reset">
                         <li>
@@ -161,7 +398,9 @@
                             <a href="#">
                                 <span class="screen-reader-text">Facebook</span>
                                 <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M6.023 16L6 9H3V6h3V4c0-2.7 1.672-4 4.08-4 1.153 0 2.144.086 2.433.124v2.821h-1.67c-1.31 0-1.563.623-1.563 1.536V6H13l-1 3H9.28v7H6.023z" fill="#0270D7"/>
+                                    <path
+                                        d="M6.023 16L6 9H3V6h3V4c0-2.7 1.672-4 4.08-4 1.153 0 2.144.086 2.433.124v2.821h-1.67c-1.31 0-1.563.623-1.563 1.536V6H13l-1 3H9.28v7H6.023z"
+                                        fill="#0270D7" />
                                 </svg>
                             </a>
                         </li>
@@ -169,7 +408,9 @@
                             <a href="#">
                                 <span class="screen-reader-text">Twitter</span>
                                 <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M16 3c-.6.3-1.2.4-1.9.5.7-.4 1.2-1 1.4-1.8-.6.4-1.3.6-2.1.8-.6-.6-1.5-1-2.4-1-1.7 0-3.2 1.5-3.2 3.3 0 .3 0 .5.1.7-2.7-.1-5.2-1.4-6.8-3.4-.3.5-.4 1-.4 1.7 0 1.1.6 2.1 1.5 2.7-.5 0-1-.2-1.5-.4C.7 7.7 1.8 9 3.3 9.3c-.3.1-.6.1-.9.1-.2 0-.4 0-.6-.1.4 1.3 1.6 2.3 3.1 2.3-1.1.9-2.5 1.4-4.1 1.4H0c1.5.9 3.2 1.5 5 1.5 6 0 9.3-5 9.3-9.3v-.4C15 4.3 15.6 3.7 16 3z" fill="#0270D7"/>
+                                    <path
+                                        d="M16 3c-.6.3-1.2.4-1.9.5.7-.4 1.2-1 1.4-1.8-.6.4-1.3.6-2.1.8-.6-.6-1.5-1-2.4-1-1.7 0-3.2 1.5-3.2 3.3 0 .3 0 .5.1.7-2.7-.1-5.2-1.4-6.8-3.4-.3.5-.4 1-.4 1.7 0 1.1.6 2.1 1.5 2.7-.5 0-1-.2-1.5-.4C.7 7.7 1.8 9 3.3 9.3c-.3.1-.6.1-.9.1-.2 0-.4 0-.6-.1.4 1.3 1.6 2.3 3.1 2.3-1.1.9-2.5 1.4-4.1 1.4H0c1.5.9 3.2 1.5 5 1.5 6 0 9.3-5 9.3-9.3v-.4C15 4.3 15.6 3.7 16 3z"
+                                        fill="#0270D7" />
                                 </svg>
                             </a>
                         </li>
@@ -177,7 +418,9 @@
                             <a href="#">
                                 <span class="screen-reader-text">Google</span>
                                 <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M7.9 7v2.4H12c-.2 1-1.2 3-4 3-2.4 0-4.3-2-4.3-4.4 0-2.4 2-4.4 4.3-4.4 1.4 0 2.3.6 2.8 1.1l1.9-1.8C11.5 1.7 9.9 1 8 1 4.1 1 1 4.1 1 8s3.1 7 7 7c4 0 6.7-2.8 6.7-6.8 0-.5 0-.8-.1-1.2H7.9z" fill="#0270D7"/>
+                                    <path
+                                        d="M7.9 7v2.4H12c-.2 1-1.2 3-4 3-2.4 0-4.3-2-4.3-4.4 0-2.4 2-4.4 4.3-4.4 1.4 0 2.3.6 2.8 1.1l1.9-1.8C11.5 1.7 9.9 1 8 1 4.1 1 1 4.1 1 8s3.1 7 7 7c4 0 6.7-2.8 6.7-6.8 0-.5 0-.8-.1-1.2H7.9z"
+                                        fill="#0270D7" />
                                 </svg>
                             </a>
                         </li>
@@ -190,4 +433,5 @@
 
     <script src="dist/js/main.min.js"></script>
 </body>
+
 </html>
